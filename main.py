@@ -12,22 +12,27 @@ def send_raknet_ping(address, port, timeout, max_retries, retry_delay):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.settimeout(timeout)
 
+    result = False
+
     for attempt in range(max_retries):
         try:
             sock.sendto(ping_packet, (address, port))
             response, server = sock.recvfrom(2048)
 
             if response and response[0] == 0x1C:
-                return True
+                result = True
+                break
             else:
-                return False
+                result = False
         except Exception as e:
             print(f"Attempt {attempt + 1} failed: {e}")
             if attempt < max_retries - 1:
                 time.sleep(retry_delay)
-            return False
+            result = False
         finally:
             sock.close()
+    
+    return result
 
 def discord_alert(webhook_url, status):
     if status == True:
